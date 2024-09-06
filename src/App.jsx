@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
-import ContactForm from "./components/contactForm";
+import ContactForm from "./components/ContactForm";
 import SearchBox from "./components/SearchBox";
 import ContactList from "./components/ContactList";
-// import * as Yup from "yup";
 
-const initialData = [
+// import { object, string, number, date } from "yup";
+
+const initialContacts = [
   { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
   { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
   { id: "id-3", name: "Eden Clements", number: "645-17-79" },
@@ -13,32 +14,47 @@ const initialData = [
 ];
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [contacts, setContacts] = useState(initialData);
-  // const handleChangeContacts = () => {
-  //   setContacts();
-  // };
-  // const handleSubmit = (values, actions) => {
-  //   console.log(values);
-  //   console.log(actions);
-  //   actions.resetForm();
-  // };
-  const deleteContacts = () => {
-    setContacts();
+  const [contacts, setContacts] = useState(() => {
+    const savedContacts = localStorage.getItem("saved contacts");
+    if (savedContacts !== null) {
+      return JSON.parse(savedContacts);
+    } else {
+      return initialContacts;
+    }
+  });
+
+  const [filter, setFilter] = useState("");
+  const addContacts = (newContact) => {
+    setContacts((prev) => [...prev, newContact]);
   };
+  const deleteContacts = (id) => {
+    setContacts((prev) => prev.filter((contact) => contact.id !== id));
+  };
+  const handleFilterChange = (evt) => {
+    setFilter(evt.target.value);
+  };
+  const filtredContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
+  useEffect(() => {
+    localStorage.setItem("saved contacts", JSON.stringify(filtredContacts));
+  }, [filtredContacts]);
   return (
     <>
       <h1>Phonebook</h1>
-      <ContactForm />
-      <SearchBox />
-      <ContactList contacts={contacts} deleteContacts={deleteContacts} />
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-      </div>
+      <ContactForm addContacts={addContacts} />
+      <SearchBox handleFilterChange={handleFilterChange} value={filter} />
+      <ContactList contacts={filtredContacts} deleteContacts={deleteContacts} />
     </>
   );
 }
 
 export default App;
+
+// Aplikacja powinna przechowywać tablicę kontaktów między odświeżeniami
+// strony w pamięci lokalnej.Użyj efektów.
+
+// Podczas dodawania i usuwania kontaktu, kontakty są zapisywane
+// w lokalnej pamięci.
+// Po załadowaniu aplikacji kontakty, jeśli istnieją, są odczytywane
+// z pamięci lokalnej i zapisywane w stanie.
